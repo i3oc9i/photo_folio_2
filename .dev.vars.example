@@ -1,0 +1,8 @@
+# Copy to .dev.vars (gitignored) for local `wrangler dev` runs.
+# These values are only used when running on the Cloudflare Workers runtime
+# locally. They mirror the secrets you set in production with
+# `bunx wrangler secret put <NAME>`.
+
+RESEND_API_KEY="re_xxxxxxxxxxxxxxxxxxxx"
+CONTACT_TO="you@example.com"
+CONTACT_FROM="Portfolio <hello@yourdomain.com>"
