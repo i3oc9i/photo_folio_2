@@ -5,4 +5,5 @@ year: 2024
 order: 1
 ---
 
-The first body of work for the portfolio. Replace this with a real artist statement.
+A longer artist statement for this project. This body renders on the project
+page above the gallery.

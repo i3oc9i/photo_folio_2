@@ -1,53 +1,77 @@
 ---
-import { getCollection } from "astro:content";
-import Gallery from "../components/Gallery.svelte";
+import { getCollection, render } from "astro:content";
+import Layout from "../layouts/Layout.astro";
 
-const entries = await getCollection("photos");
-const photos = entries
-  .sort((a, b) => a.data.order - b.data.order)
-  .map((e) => ({
-    src: e.data.image,
-    alt: e.data.alt,
-    title: e.data.title,
-  }));
+const projects = (await getCollection("projects")).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+
+const allPhotos = await getCollection("photos");
+
+const projectsWithCovers = projects.map((p) => {
+  const cover =
+    p.data.cover ??
+    allPhotos
+      .filter((ph) => ph.data.project.id === p.id)
+      .sort((a, b) => a.data.order - b.data.order)[0]?.data.image;
+  return { project: p, cover };
+});
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>Fine Art Photography — photo_folio_2</title>
-  </head>
-  <body>
-    <header>
-      <h1>Fine Art Photography</h1>
-      <p>A scaffolded portfolio — Astro + Svelte on Cloudflare.</p>
-      <nav>
-        <a href="/">Work</a>
-        <a href="/contact">Contact</a>
-      </nav>
-    </header>
-    <main>
-      <Gallery photos={photos} client:load />
-    </main>
+<Layout>
+  <section class="intro">
+    <h1>Selected work</h1>
+    <p>A growing set of projects. Click into one to see the photographs.</p>
+  </section>
 
-    <style is:global>
-      :root { color-scheme: light dark; }
-      body {
-        margin: 0;
-        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-        background: #0b0b0c;
-        color: #ececec;
-      }
-      header { padding: 3rem 1.5rem 1.5rem; max-width: 1100px; margin: 0 auto; }
-      header h1 { font-weight: 300; letter-spacing: 0.02em; margin: 0 0 0.25rem; }
-      header p { opacity: 0.7; margin: 0 0 1rem; }
-      header nav { display: flex; gap: 1.25rem; }
-      header nav a { color: inherit; text-decoration: none; opacity: 0.8; }
-      header nav a:hover { opacity: 1; text-decoration: underline; }
-      main { padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
-    </style>
-  </body>
-</html>
+  <ul class="projects">
+    {projectsWithCovers.map(({ project, cover }) => (
+      <li>
+        <a href={`/projects/${project.id}/`}>
+          {cover && <img src={cover} alt={`${project.data.title} — cover`} loading="lazy" />}
+          <div class="meta">
+            <h2>{project.data.title}</h2>
+            <p>{project.data.description}</p>
+          </div>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <style>
+    .intro h1 {
+      font-weight: 300;
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      letter-spacing: 0.02em;
+      margin: 0 0 0.25rem;
+    }
+    .intro p { opacity: 0.7; margin: 0 0 2rem; }
+    ul.projects {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 1.25rem;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+    ul.projects a {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #111;
+      transition: transform 250ms ease;
+    }
+    ul.projects a:hover { transform: translateY(-2px); }
+    ul.projects img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+    .meta { padding: 1rem 1.1rem 1.25rem; }
+    .meta h2 { margin: 0 0 0.35rem; font-weight: 400; font-size: 1.1rem; }
+    .meta p { margin: 0; font-size: 0.9rem; opacity: 0.75; }
+  </style>
+</Layout>

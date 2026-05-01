@@ -9,20 +9,93 @@ Fine art photography portfolio.
 ```
 src/
 ├── content/
-│   ├── photos/          # one .md per image (frontmatter = metadata)
-│   └── series/          # one .md per body of work
+│   ├── site/main.md       # site title, tagline, social links, about (body)
+│   ├── projects/*.md      # each project: title, description, year, optional cover
+│   ├── photos/*.md        # each photograph; references a project, optionally a story
+│   └── stories/*.md       # standalone stories that can be linked from a photo
+├── content.config.ts      # zod schemas + cross-collection references
+├── layouts/
+│   └── Layout.astro       # shared chrome — reads site.md for title/social
 ├── components/
-│   ├── Gallery.svelte   # interactive grid + lightbox
+│   ├── Gallery.svelte     # interactive grid + lightbox
 │   └── ContactForm.svelte
-├── pages/
-│   ├── index.astro      # portfolio (prerendered)
-│   ├── contact.astro    # contact page (prerendered)
-│   └── api/
-│       └── contact.ts   # Worker route — sends email via Resend
-└── content.config.ts    # zod schema for the collections
+└── pages/
+    ├── index.astro                # lists projects (with cover from first photo)
+    ├── about.astro                # renders site/main.md body
+    ├── contact.astro              # contact form
+    ├── projects/[slug].astro      # one page per project
+    ├── photos/[slug].astro        # one page per photograph (+ EXIF + story link)
+    ├── stories/[slug].astro       # one page per story (+ linked photos)
+    └── api/contact.ts             # Worker route — sends email via Resend
 ```
 
 All pages prerender to static HTML. Only `/api/contact` runs as a Worker.
+
+## Editing your site as a photographer
+
+Everything personal lives in `src/content/`. You don't touch any TypeScript to
+publish new work.
+
+### Site identity (header, about, social links)
+
+Edit `src/content/site/main.md`. The frontmatter sets the site title, tagline,
+your email, and your social links. The markdown body becomes the **About** page.
+
+### Add a project
+
+Create `src/content/projects/<slug>.md`:
+
+```yaml
+---
+title: "Coastlines"
+description: "A short tagline shown on the homepage card."
+year: 2025
+order: 2
+---
+
+Optional longer artist statement (markdown body).
+```
+
+### Add a photograph
+
+Create `src/content/photos/<slug>.md`:
+
+```yaml
+---
+title: "Cliff at dusk"
+project: "coastlines"          # required — must match a project slug
+story: "october-storms"        # optional — match a story slug
+year: 2025
+location: "Étretat, France"
+image: "/images/cliff-dusk.jpg"  # or remote URL
+alt: "Cliff face at dusk with breaking waves"
+order: 1
+exif:
+  camera: "Sony A7R IV"
+  lens: "70-200mm f/2.8"
+  focalLength: "200mm"
+  aperture: "f/8"
+  shutter: "1/500s"
+  iso: 400
+---
+```
+
+### Add a story (optional, attach to one or more photos)
+
+Create `src/content/stories/<slug>.md`:
+
+```yaml
+---
+title: "October storms"
+date: 2025-10-12
+excerpt: "Three days of weather and what it taught me."
+---
+
+Markdown body of the story.
+```
+
+Then reference it from a photo via `story: "<slug>"`. The photo page links to
+the story; the story page lists the photos that reference it.
 
 ## Local development
 

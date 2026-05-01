@@ -1,0 +1,36 @@
+---
+import { getEntry, render } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+
+const entry = await getEntry("site", "main");
+if (!entry) throw new Error("Missing src/content/site/main.md");
+const { Content } = await render(entry);
+---
+
+<Layout pageTitle="About">
+  <article class="prose">
+    <h1>{entry.data.title}</h1>
+    {entry.data.tagline && <p class="tagline">{entry.data.tagline}</p>}
+    <Content />
+  </article>
+
+  <style>
+    .prose {
+      max-width: 38rem;
+    }
+    .prose h1 {
+      font-weight: 300;
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      letter-spacing: 0.02em;
+      margin: 0 0 0.25rem;
+    }
+    .prose .tagline { opacity: 0.7; margin: 0 0 2rem; font-size: 1rem; }
+    .prose :global(h2) {
+      font-weight: 400;
+      margin: 2rem 0 0.5rem;
+      font-size: 1.15rem;
+    }
+    .prose :global(p) { margin: 0 0 1rem; }
+    .prose :global(a) { color: #9bb1ff; }
+  </style>
+</Layout>

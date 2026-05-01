@@ -1,0 +1,85 @@
+---
+import { getCollection, render } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import Gallery from "../../components/Gallery.svelte";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+  const photos = await getCollection("photos");
+
+  return projects.map((project) => {
+    const projectPhotos = photos
+      .filter((p) => p.data.project.id === project.id)
+      .sort((a, b) => a.data.order - b.data.order);
+
+    return {
+      params: { slug: project.id },
+      props: { project, photos: projectPhotos },
+    };
+  });
+}
+
+const { project, photos } = Astro.props;
+const { Content } = await render(project);
+
+const galleryItems = photos.map((p) => ({
+  src: p.data.image,
+  alt: p.data.alt,
+  title: p.data.title,
+}));
+---
+
+<Layout pageTitle={project.data.title} description={project.data.description}>
+  <article class="project">
+    <header>
+      <h1>{project.data.title}</h1>
+      <p class="lede">{project.data.description}</p>
+      {project.body && project.body.trim().length > 0 && (
+        <div class="prose"><Content /></div>
+      )}
+    </header>
+
+    {photos.length > 0 ? (
+      <Gallery photos={galleryItems} client:load />
+    ) : (
+      <p class="empty">No photographs in this project yet.</p>
+    )}
+
+    <ul class="captions">
+      {photos.map((p) => (
+        <li>
+          <a href={`/photos/${p.id}/`}>
+            <strong>{p.data.title}</strong>
+            {p.data.location && <span class="loc">— {p.data.location}</span>}
+            {p.data.year && <span class="yr">, {p.data.year}</span>}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </article>
+
+  <style>
+    .project header { margin-bottom: 2rem; max-width: 38rem; }
+    .project h1 {
+      font-weight: 300;
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      letter-spacing: 0.02em;
+      margin: 0 0 0.5rem;
+    }
+    .project .lede { opacity: 0.8; margin: 0 0 1rem; font-size: 1.05rem; }
+    .project .prose { font-size: 0.95rem; opacity: 0.85; }
+    .project .empty { opacity: 0.7; }
+    ul.captions {
+      list-style: none;
+      padding: 0;
+      margin: 2rem 0 0;
+      display: grid;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    ul.captions a { text-decoration: none; }
+    ul.captions a:hover { text-decoration: underline; }
+    .loc, .yr { opacity: 0.7; }
+  </style>
+</Layout>
